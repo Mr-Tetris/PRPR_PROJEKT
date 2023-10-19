@@ -110,22 +110,6 @@ void n(char ***id_modulu, char ***pozicia_modulu, char ***typ_mer_veliciny, doub
 
         aktualny_zaznam++;
     }
-
-    // Uvolnite staré polia, ak existujú
-    if (*id_modulu != NULL) {
-        for (int i = 0; i < *pocet_zaznamov; i++) {
-            free((*id_modulu)[i]);
-            free((*pozicia_modulu)[i]);
-            free((*typ_mer_veliciny)[i]);
-        }
-        free(*id_modulu);
-        free(*pozicia_modulu);
-        free(*typ_mer_veliciny);
-        free(*hodnota);
-        free(*cas_merania);
-        free(*datum_merania);
-    }
-
     *id_modulu = id_modulu_temp;
     *pozicia_modulu = pozicia_modulu_temp;
     *typ_mer_veliciny = typ_mer_veliciny_temp;
@@ -136,8 +120,72 @@ void n(char ***id_modulu, char ***pozicia_modulu, char ***typ_mer_veliciny, doub
     fclose(subor);
 }
 
-void c() {
-    // Doimplementujte tuto funkciu
+void c(char **id_modulu, int *datum_merania, int pocet_zaznamov) {
+    int Y;
+    printf("Zadaj počet mesiacov: \n");
+    scanf("%d", &Y);
+    FILE *subor = fopen("ciachovanie.txt", "r");
+
+    char riadok[256];
+    int Cpocet_zaznamov = 0;
+
+    if (!subor) {
+        printf("Chyba pri otváraní súboru.\n");
+        return;
+    }
+
+    while (fgets(riadok, sizeof(riadok), subor)) {
+        if (riadok[0] == '\n') {
+            Cpocet_zaznamov++;
+        }
+    }
+    rewind(subor);
+
+    char **id_moduluC_temp = (char **)malloc(Cpocet_zaznamov * sizeof(char *));
+    int *datum_merania_temp = (int *)malloc(Cpocet_zaznamov * sizeof(int));
+    int aktualny_zaznam = 0;
+
+    while (fgets(riadok, sizeof(riadok), subor)) {
+        if (riadok[0] == '\n') {
+            continue;
+        }
+
+        switch (aktualny_zaznam % 2) {
+            case 0:
+                id_moduluC_temp[aktualny_zaznam / 2] = strdup(riadok);
+                break;
+            case 1:
+                datum_merania_temp[aktualny_zaznam / 2] = atoi(riadok);
+                break;
+        }
+
+        aktualny_zaznam++;
+    }
+
+    // Vypíšeme relevantné záznamy
+    for (int i = 0; i < Cpocet_zaznamov; i++) {
+        for (int j = 0; j < pocet_zaznamov; j++) {
+            if (strcmp(id_modulu[j], id_moduluC_temp[i]) == 0) {
+                int datum_ciachovania = datum_merania_temp[i];
+                int rozdiel_mesiacov = (datum_merania[j] / 10000 - datum_ciachovania / 10000) * 12 +
+                                       (datum_merania[j] / 100 % 100 - datum_ciachovania / 100 % 100);
+                if (rozdiel_mesiacov > Y) {
+                    printf("ID. mer. modulu [%s] má %d mesiacov od ciachovania.\n", id_moduluC_temp[i], rozdiel_mesiacov);
+                }
+                break;
+            }
+        }
+
+    }
+
+    // Uvoľnenie temp premenných a dynamicky alokovanej pamäte
+    for (int i = 0; i < Cpocet_zaznamov; i++) {
+        free(id_moduluC_temp[i]);
+    }
+    free(id_moduluC_temp);
+    free(datum_merania_temp);
+
+    fclose(subor);
 }
 
 void s() {
@@ -175,7 +223,7 @@ int main() {
         } else if (prikaz == 'n') {
             n(&id_modulu, &pozicia_modulu, &typ_mer_veliciny, &hodnota, &cas_merania, &datum_merania, &pocet_zaznamov);
         } else if (prikaz == 'c') {
-            c();
+            c(id_modulu, datum_merania, pocet_zaznamov);
         } else if (prikaz == 's') {
             s();
         } else if (prikaz == 'h') {
