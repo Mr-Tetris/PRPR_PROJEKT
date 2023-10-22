@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -124,6 +125,7 @@ void c(char **id_modulu, int *datum_merania, int pocet_zaznamov) {
     int Y;
     printf("Zadaj počet mesiacov: \n");
     scanf("%d", &Y);
+
     FILE *subor = fopen("ciachovanie.txt", "r");
 
     char riadok[256];
@@ -162,20 +164,31 @@ void c(char **id_modulu, int *datum_merania, int pocet_zaznamov) {
         aktualny_zaznam++;
     }
 
-    // Vypíšeme relevantné záznamy
+    int nekorektnyZaznam = 0; // Pre kontrolu, či záznamy nie sú korektné
+
     for (int i = 0; i < Cpocet_zaznamov; i++) {
+        int nasielSa = 0; // Pre kontrolu, či sa našiel záznam v poli id_modulu
+        int datum_ciachovania = datum_merania_temp[i];
+
         for (int j = 0; j < pocet_zaznamov; j++) {
             if (strcmp(id_modulu[j], id_moduluC_temp[i]) == 0) {
-                int datum_ciachovania = datum_merania_temp[i];
+                nasielSa = 1;
                 int rozdiel_mesiacov = (datum_merania[j] / 10000 - datum_ciachovania / 10000) * 12 +
                                        (datum_merania[j] / 100 % 100 - datum_ciachovania / 100 % 100);
                 if (rozdiel_mesiacov > Y) {
                     printf("ID. mer. modulu [%s] má %d mesiacov od ciachovania.\n", id_moduluC_temp[i], rozdiel_mesiacov);
                 }
-                break;
             }
         }
 
+        if (nasielSa == 0) {
+            printf("ID. mer. modulu [%s] nie je ciachovany.\n", id_moduluC_temp[i]);
+            nekorektnyZaznam = 1;
+        }
+    }
+
+    if (nekorektnyZaznam == 0) {
+        printf("Data su korektne.\n");
     }
 
     // Uvoľnenie temp premenných a dynamicky alokovanej pamäte
@@ -187,6 +200,7 @@ void c(char **id_modulu, int *datum_merania, int pocet_zaznamov) {
 
     fclose(subor);
 }
+
 
 void s() {
     // Doimplementujte tuto funkciu
