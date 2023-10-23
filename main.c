@@ -166,23 +166,22 @@ void c(char **id_modulu, int *datum_merania, int pocet_zaznamov) {
 
     int nekorektnyZaznam = 0; // Pre kontrolu, či záznamy nie sú korektné
 
-    for (int i = 0; i < Cpocet_zaznamov; i++) {
+    for (int i = 0; i <= pocet_zaznamov; i++) {
         int nasielSa = 0; // Pre kontrolu, či sa našiel záznam v poli id_modulu
-        int datum_ciachovania = datum_merania_temp[i];
-
-        for (int j = 0; j < pocet_zaznamov; j++) {
-            if (strcmp(id_modulu[j], id_moduluC_temp[i]) == 0) {
+        for (int j = 0; j <= Cpocet_zaznamov; j++) {
+            int datum_ciachovania = datum_merania_temp[j];
+            if (strcmp(id_modulu[i], id_moduluC_temp[j]) == 0) {
                 nasielSa = 1;
-                int rozdiel_mesiacov = (datum_merania[j] / 10000 - datum_ciachovania / 10000) * 12 +
-                                       (datum_merania[j] / 100 % 100 - datum_ciachovania / 100 % 100);
+                int rozdiel_mesiacov = (datum_merania[i] / 10000 - datum_ciachovania / 10000) * 12 +
+                                       (datum_merania[i] / 100 % 100 - datum_ciachovania / 100 % 100);
                 if (rozdiel_mesiacov > Y) {
-                    printf("ID. mer. modulu [%s] má %d mesiacov od ciachovania.\n", id_moduluC_temp[i], rozdiel_mesiacov);
+                    printf("ID. mer. modulu [%s] má %d mesiacov od ciachovania.\n", id_modulu[i], rozdiel_mesiacov);
                 }
             }
         }
 
         if (nasielSa == 0) {
-            printf("ID. mer. modulu [%s] nie je ciachovany.\n", id_moduluC_temp[i]);
+            printf("ID. mer. modulu [%s] nie je ciachovany.\n", id_modulu[i]);
             nekorektnyZaznam = 1;
         }
     }
