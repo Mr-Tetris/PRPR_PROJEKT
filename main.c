@@ -205,8 +205,57 @@ void s() {
     // Doimplementujte tuto funkciu
 }
 
-void h() {
-    // Doimplementujte tuto funkciu
+void h(char **typy_meranych_velicin, double *hodnoty, int pocet_zaznamov) {
+    if (typy_meranych_velicin == NULL || hodnoty == NULL || pocet_zaznamov == 0) {
+        printf("Polia nie sú vytvorené.\n");
+        return;
+    }
+
+
+    printf("%-15s %-10s %-10s %-10s\n", "Typ mer. vel.", "Početnosť", "Minimum", "Maximum");
+
+
+    int pocet_unikatnych_typou = 0;
+    char unikatne_typy[100][15];
+
+    for (int i = 0; i < pocet_zaznamov; i++) {
+        int nalezeno = 0;
+        for (int j = 0; j < pocet_unikatnych_typou; j++) {
+            if (strcmp(typy_meranych_velicin[i], unikatne_typy[j]) == 0) {
+                nalezeno = 1;
+                break;
+            }
+        }
+        if (!nalezeno) {
+            strcpy(unikatne_typy[pocet_unikatnych_typou], typy_meranych_velicin[i]);
+            pocet_unikatnych_typou++;
+        }
+    }
+
+    // Vytvořte tabulku pro každý jedinečný typ
+    for (int i = 0; i < pocet_unikatnych_typou; i++) {
+        char typ[15];
+        strcpy(typ, unikatne_typy[i]);
+
+        int pocetnost = 0;
+        double minimum = -1.0;
+        double maximum = -1.0;
+
+        for (int j = 0; j < pocet_zaznamov; j++) {
+            if (strcmp(typy_meranych_velicin[j], typ) == 0) {
+                pocetnost++;
+                if (minimum == -1.0 || hodnoty[j] < minimum) {
+                    minimum = hodnoty[j];
+                }
+                if (maximum == -1.0 || hodnoty[j] > maximum) {
+                    maximum = hodnoty[j];
+                }
+            }
+        }
+
+        // Vytisknout radek tabulky pro aktualni typ
+        printf("%-15s %-10d %-10.2lf %-10.2lf\n", typ, pocetnost, minimum, maximum);
+    }
 }
 
 void z() {
@@ -240,7 +289,7 @@ int main() {
         } else if (prikaz == 's') {
             s();
         } else if (prikaz == 'h') {
-            h();
+            h(typ_mer_veliciny, hodnota, pocet_zaznamov);
         } else if (prikaz == 'z') {
             z();
         } else if (prikaz == 'k') {
