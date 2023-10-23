@@ -262,8 +262,18 @@ void z() {
     // Doimplementujte tuto funkciu
 }
 
-void k() {
-    // Doimplementujte tuto funkciu
+void k(char **id_modulu, char **pozicia_modulu, char **typ_mer_veliciny, double *hodnota, int *cas_merania, int *datum_merania, int pocet_zaznamov) {
+    for (int i = 0; i < pocet_zaznamov; i++) {
+        free(id_modulu[i]);
+        free(pozicia_modulu[i]);
+        free(typ_mer_veliciny[i]);
+    }
+    free(id_modulu);
+    free(pozicia_modulu);
+    free(typ_mer_veliciny);
+    free(hodnota);
+    free(cas_merania);
+    free(datum_merania);
 }
 
 int main() {
@@ -293,25 +303,11 @@ int main() {
         } else if (prikaz == 'z') {
             z();
         } else if (prikaz == 'k') {
-            k();
+            k(id_modulu, pozicia_modulu, typ_mer_veliciny, hodnota, cas_merania, datum_merania, pocet_zaznamov);
         } else {
             printf("Neplatný príkaz\n");
             break;
         }
     }
-
-    // Uvoľnenie dynamicky alokovanej pamäte na konci programu
-    for (int i = 0; i < pocet_zaznamov; i++) {
-        free(id_modulu[i]);
-        free(pozicia_modulu[i]);
-        free(typ_mer_veliciny[i]);
-    }
-    free(id_modulu);
-    free(pozicia_modulu);
-    free(typ_mer_veliciny);
-    free(hodnota);
-    free(cas_merania);
-    free(datum_merania);
-
     return 0;
 }
