@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define MAX_LINE_LENGTH 256
 
 void v(char ***id_modulu, char ***pozicia_modulu, char ***typ_mer_veliciny, double **hodnota, int **cas_merania, int **datum_merania, int *pocet_zaznamov) {
     FILE *subor = fopen("dataloger.txt", "r");
@@ -124,18 +123,18 @@ void n(char ***id_modulu, char ***pozicia_modulu, char ***typ_mer_veliciny, doub
 
 void c(char **id_modulu, int *datum_merania, int pocet_zaznamov) {
     int Y;
-    printf("Zadaj počet mesiacov: ");
+    printf("Zadaj počet mesiacov: \n");
     scanf("%d", &Y);
 
     FILE *subor = fopen("ciachovanie.txt", "r");
+
+    char riadok[256];
+    int Cpocet_zaznamov = 0;
 
     if (!subor) {
         printf("Chyba pri otváraní súboru.\n");
         return;
     }
-
-    char riadok[256];
-    int Cpocet_zaznamov = 0;
 
     while (fgets(riadok, sizeof(riadok), subor)) {
         if (riadok[0] == '\n') {
@@ -153,34 +152,46 @@ void c(char **id_modulu, int *datum_merania, int pocet_zaznamov) {
             continue;
         }
 
-        id_moduluC_temp[aktualny_zaznam] = strdup(riadok);
-        fscanf(subor, "%d", &datum_merania_temp[aktualny_zaznam]);
+        switch (aktualny_zaznam % 2) {
+            case 0:
+                id_moduluC_temp[aktualny_zaznam / 2] = strdup(riadok);
+                break;
+            case 1:
+                datum_merania_temp[aktualny_zaznam / 2] = atoi(riadok);
+                break;
+        }
+
         aktualny_zaznam++;
     }
 
-    // Vypíšeme relevantní záznamy
-    for (int i = 0; i < pocet_zaznamov; i++) {
-        if (id_modulu[i]) {
-            int najdene = 0;
-            for (int j = 0; j < Cpocet_zaznamov; j++) {
-                if (strcmp(id_modulu[i], id_moduluC_temp[j]) == 0) {
-                    int datum_ciachovania = datum_merania_temp[j];
-                    int rozdiel_mesiacov = ((datum_merania[i] / 10000 - datum_ciachovania / 10000) * 12 +
-                                            (datum_merania[i] / 100 % 100 - datum_ciachovania / 100 % 100));
-                    if (rozdiel_mesiacov > Y) {
-                        printf("ID. mer. modulu [%s] má %d mesiacov od ciachovania.\n", id_modulu[i], rozdiel_mesiacov);
-                    }
-                    najdene = 1;
-                    break;
+    int nekorektnyZaznam = 0; // Pre kontrolu, či záznamy nie sú korektné
+
+    for (int i = 0; i <= pocet_zaznamov; i++) {
+        int nasielSa = 0; // Pre kontrolu, či sa našiel záznam v poli id_modulu
+        for (int j = 0; j <= Cpocet_zaznamov; j++) {
+            int datum_ciachovania = datum_merania_temp[j];
+            if (strcmp(id_modulu[i], id_moduluC_temp[j]) == 0) {
+                nasielSa = 1;
+                int rozdiel_mesiacov = (datum_merania[i] / 10000 - datum_ciachovania / 10000) * 12 +
+                                       (datum_merania[i] / 100 % 100 - datum_ciachovania / 100 % 100);
+                if (rozdiel_mesiacov >= Y) {
+                    rozdiel_mesiacov = rozdiel_mesiacov - Y;
+                    printf("ID. mer. modulu [%s] má %d mesiacov od ciachovania.\n", id_modulu[i], rozdiel_mesiacov);
                 }
             }
-            if (!najdene) {
-                printf("ID. mer. modulu [%s] nie je ciachovaný.\n", id_modulu[i]);
-            }
+        }
+
+        if (nasielSa == 0) {
+            printf("ID. mer. modulu [%s] nie je ciachovany.\n", id_modulu[i]);
+            nekorektnyZaznam = 1;
         }
     }
 
-    // Uvolnění temp proměnných a dynamicky alokované paměti
+    if (nekorektnyZaznam == 0) {
+        printf("Data su korektne.\n");
+    }
+
+    // Uvoľnenie temp premenných a dynamicky alokovanej pamäte
     for (int i = 0; i < Cpocet_zaznamov; i++) {
         free(id_moduluC_temp[i]);
     }
@@ -189,10 +200,6 @@ void c(char **id_modulu, int *datum_merania, int pocet_zaznamov) {
 
     fclose(subor);
 }
-
-
-
-
 
 
 void s() {
@@ -252,72 +259,8 @@ void h(char **typy_meranych_velicin, double *hodnoty, int pocet_zaznamov) {
     }
 }
 
-void z(char ***id_modulu, char ***pozicia_modulu, char ***typ_mer_veliciny, double **hodnota, int **cas_merania, int **datum_merania, int *pocet_zaznamov) {
-    // Implementace funkce pro smazání záznamů podle ID
-    if (*id_modulu == NULL || *pozicia_modulu == NULL || *typ_mer_veliciny == NULL || *hodnota == NULL || *cas_merania == NULL || *datum_merania == NULL || *pocet_zaznamov == 0) {
-        printf("Polia nie sú vytvorené.\n");
-        return;
-    }
-
-    char id_splatit[MAX_LINE_LENGTH];
-    printf("Napíšte ID, které chcete vymazat:\n");
-    scanf("%s", id_splatit);
-
-    int pocet_vymazanych = 0;
-
-    for (int i = 0; i < *pocet_zaznamov; i++) {
-        if (*id_modulu[i] && strcmp(*id_modulu[i], id_splatit) == 0) {
-            free(*id_modulu[i]);
-            free(*pozicia_modulu[i]);
-            free(*typ_mer_veliciny[i]);
-            pocet_vymazanych++;
-            // Nastavíme ukazatele na NULL, aby bylo jasné, že tyto záznamy byly smazány
-            *id_modulu[i] = NULL;
-            *pozicia_modulu[i] = NULL;
-            *typ_mer_veliciny[i] = NULL;
-        }
-    }
-
-    // Vytvoření nových pole bez smazaných záznamů
-    char **nove_id_modulu = (char **)malloc((*pocet_zaznamov - pocet_vymazanych) * sizeof(char *));
-    char **nove_pozicia_modulu = (char **)malloc((*pocet_zaznamov - pocet_vymazanych) * sizeof(char *));
-    char **nove_typ_mer_veliciny = (char **)malloc((*pocet_zaznamov - pocet_vymazanych) * sizeof(char *));
-    double *nove_hodnota = (double *)malloc((*pocet_zaznamov - pocet_vymazanych) * sizeof(double));
-    int *nove_cas_merania = (int *)malloc((*pocet_zaznamov - pocet_vymazanych) * sizeof(int));
-    int *nove_datum_merania = (int *)malloc((*pocet_zaznamov - pocet_vymazanych) * sizeof(int));
-
-    int aktualny_index = 0;
-
-    for (int i = 0; i < *pocet_zaznamov; i++) {
-        if (*id_modulu[i] != NULL) {
-            nove_id_modulu[aktualny_index] = *id_modulu[i];
-            nove_pozicia_modulu[aktualny_index] = *pozicia_modulu[i];
-            nove_typ_mer_veliciny[aktualny_index] = *typ_mer_veliciny[i];
-            nove_hodnota[aktualny_index] = (*hodnota)[i];
-            nove_cas_merania[aktualny_index] = (*cas_merania)[i];
-            nove_datum_merania[aktualny_index] = (*datum_merania)[i];
-            aktualny_index++;
-        }
-    }
-
-    // Uvolnění původních polí
-    free(*id_modulu);
-    free(*pozicia_modulu);
-    free(*typ_mer_veliciny);
-    free(*hodnota);
-    free(*cas_merania);
-    free(*datum_merania);
-
-    // Nastavení nových polí jako aktuálních polí
-    *id_modulu = nove_id_modulu;
-    *pozicia_modulu = nove_pozicia_modulu;
-    *typ_mer_veliciny = nove_typ_mer_veliciny;
-    *hodnota = nove_hodnota;
-    *cas_merania = nove_cas_merania;
-    *datum_merania = nove_datum_merania;
-    *pocet_zaznamov -= pocet_vymazanych;
-
-    printf("Vymazalo sa: %d záznamov!\n", pocet_vymazanych);
+void z() {
+    // Doimplementujte tuto funkciu
 }
 
 void k(char **id_modulu, char **pozicia_modulu, char **typ_mer_veliciny, double *hodnota, int *cas_merania, int *datum_merania, int pocet_zaznamov) {
@@ -359,7 +302,7 @@ int main() {
         } else if (prikaz == 'h') {
             h(typ_mer_veliciny, hodnota, pocet_zaznamov);
         } else if (prikaz == 'z') {
-            z(&id_modulu, &pozicia_modulu, &typ_mer_veliciny, &hodnota, &cas_merania, &datum_merania, &pocet_zaznamov);
+            z();
         } else if (prikaz == 'k') {
             k(id_modulu, pozicia_modulu, typ_mer_veliciny, hodnota, cas_merania, datum_merania, pocet_zaznamov);
         } else {
