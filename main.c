@@ -1,25 +1,19 @@
-#include "stdio.h"
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
 #include <stdlib.h>
-#include "string.h"
+#include <string.h>
 
-char **id_modulu = NULL;
-char **pozicia_modulu = NULL;
-char **typ_mer_veliciny = NULL;
-double *hodnota = NULL;
-int *cas_merania = NULL;
-int *datum_merania = NULL;
-int pocet_zaznamov = 0;
-
-
-void v(){
+void v(char ***id_modulu, char ***pozicia_modulu, char ***typ_mer_veliciny, double **hodnota, int **cas_merania, int **datum_merania, int *pocet_zaznamov) {
     FILE *subor = fopen("dataloger.txt", "r");
-    if (subor == NULL){
+    if (subor == NULL) {
         printf("Subor sa nepodarilo otvorit\n");
         return;
     }
+
     char riadok[256];
     int zaznam_cislo = 0;
-    if (pocet_zaznamov == 0){
+
+    if (*pocet_zaznamov == 0) {
         while (fgets(riadok, sizeof(riadok), subor)) {
             char *newline = strchr(riadok, '\n');
             if (newline) {
@@ -47,50 +41,46 @@ void v(){
                     printf("\n"); // Prázdny riadok medzi záznammi
                     break;
             }
-
             zaznam_cislo++;
         }
     } else {
-        printf("pisem zo suboru\n");
-        for (int i = 0; i < pocet_zaznamov; i++) {
-            printf("ID. mer. modulu: %s", id_modulu[i]);
-            printf("Pozicia modulu: %s", pozicia_modulu[i]);
-            printf("Typ mer. veliciny: %s", typ_mer_veliciny[i]);
-            printf("Hodnota: %.2lf\n", hodnota[i]);
-            printf("Cas merania: %04d\n", cas_merania[i]);
-            printf("Datum merania: %08d\n", datum_merania[i]);
+        printf("Pisem zo suboru\n");
+        for (int i = 0; i < *pocet_zaznamov; i++) {
+            printf("ID. mer. modulu: %s", (*id_modulu)[i]);
+            printf("Pozícia modulu: %s", (*pozicia_modulu)[i]);
+            printf("Typ mer. veliciny: %s", (*typ_mer_veliciny)[i]);
+            printf("Hodnota: %.2lf\n", (*hodnota)[i]);
+            printf("Cas merania: %04d\n", (*cas_merania)[i]);
+            printf("Datum merania: %08d\n", (*datum_merania)[i]);
             printf("\n");
         }
     }
     fclose(subor);
 }
 
-
-void n(){
+void n(char ***id_modulu, char ***pozicia_modulu, char ***typ_mer_veliciny, double **hodnota, int **cas_merania, int **datum_merania, int *pocet_zaznamov) {
     FILE *subor = fopen("dataloger.txt", "r");
-    if (!subor) {
+    if (subor == NULL) {
         printf("Chyba pri otvarani suboru.\n");
         return;
     }
 
-    // Získajte počet záznamov v súbore
     char riadok[256];
 
     while (fgets(riadok, sizeof(riadok), subor)) {
         if (riadok[0] == '\n') {
-            pocet_zaznamov++;
+            (*pocet_zaznamov)++;
         }
     }
 
     rewind(subor);
 
-    // Dynamicky vytvorte polia pre jednotlivé položky
-    id_modulu = (char **)malloc(pocet_zaznamov * sizeof(char *));
-    pozicia_modulu = (char **)malloc(pocet_zaznamov * sizeof(char *));
-    typ_mer_veliciny = (char **)malloc(pocet_zaznamov * sizeof(char *));
-    hodnota = (double *)malloc(pocet_zaznamov * sizeof(double));
-    cas_merania = (int *)malloc(pocet_zaznamov * sizeof(int));
-    datum_merania = (int *)malloc(pocet_zaznamov * sizeof(int));
+    char **id_modulu_temp = (char **)malloc((*pocet_zaznamov) * sizeof(char *));
+    char **pozicia_modulu_temp = (char **)malloc((*pocet_zaznamov) * sizeof(char *));
+    char **typ_mer_veliciny_temp = (char **)malloc((*pocet_zaznamov) * sizeof(char *));
+    double *hodnota_temp = (double *)malloc((*pocet_zaznamov) * sizeof(double));
+    int *cas_merania_temp = (int *)malloc((*pocet_zaznamov) * sizeof(int));
+    int *datum_merania_temp = (int *)malloc((*pocet_zaznamov) * sizeof(int));
     int aktualny_zaznam = 0;
 
     while (fgets(riadok, sizeof(riadok), subor)) {
@@ -100,73 +90,224 @@ void n(){
 
         switch (aktualny_zaznam % 6) {
             case 0:
-                id_modulu[aktualny_zaznam / 6] = strdup(riadok);
+                id_modulu_temp[aktualny_zaznam / 6] = strdup(riadok);
                 break;
             case 1:
-                pozicia_modulu[aktualny_zaznam / 6] = strdup(riadok);
+                pozicia_modulu_temp[aktualny_zaznam / 6] = strdup(riadok);
                 break;
             case 2:
-                typ_mer_veliciny[aktualny_zaznam / 6] = strdup(riadok);
+                typ_mer_veliciny_temp[aktualny_zaznam / 6] = strdup(riadok);
                 break;
             case 3:
-                hodnota[aktualny_zaznam / 6] = atof(riadok);
+                hodnota_temp[aktualny_zaznam / 6] = atof(riadok);
                 break;
             case 4:
-                cas_merania[aktualny_zaznam / 6] = atoi(riadok);
+                cas_merania_temp[aktualny_zaznam / 6] = atoi(riadok);
                 break;
             case 5:
-                datum_merania[aktualny_zaznam / 6] = atoi(riadok);
+                datum_merania_temp[aktualny_zaznam / 6] = atoi(riadok);
                 break;
         }
 
         aktualny_zaznam++;
     }
+    *id_modulu = id_modulu_temp;
+    *pozicia_modulu = pozicia_modulu_temp;
+    *typ_mer_veliciny = typ_mer_veliciny_temp;
+    *hodnota = hodnota_temp;
+    *cas_merania = cas_merania_temp;
+    *datum_merania = datum_merania_temp;
+
+    fclose(subor);
 }
 
-void c(){
+void c(char **id_modulu, int *datum_merania, int pocet_zaznamov) {
+    int Y;
+    printf("Zadaj počet mesiacov: \n");
+    scanf("%d", &Y);
 
+    FILE *subor = fopen("ciachovanie.txt", "r");
+
+    char riadok[256];
+    int Cpocet_zaznamov = 0;
+
+    if (!subor) {
+        printf("Chyba pri otváraní súboru.\n");
+        return;
+    }
+
+    while (fgets(riadok, sizeof(riadok), subor)) {
+        if (riadok[0] == '\n') {
+            Cpocet_zaznamov++;
+        }
+    }
+    rewind(subor);
+
+    char **id_moduluC_temp = (char **)malloc(Cpocet_zaznamov * sizeof(char *));
+    int *datum_merania_temp = (int *)malloc(Cpocet_zaznamov * sizeof(int));
+    int aktualny_zaznam = 0;
+
+    while (fgets(riadok, sizeof(riadok), subor)) {
+        if (riadok[0] == '\n') {
+            continue;
+        }
+
+        switch (aktualny_zaznam % 2) {
+            case 0:
+                id_moduluC_temp[aktualny_zaznam / 2] = strdup(riadok);
+                break;
+            case 1:
+                datum_merania_temp[aktualny_zaznam / 2] = atoi(riadok);
+                break;
+        }
+
+        aktualny_zaznam++;
+    }
+
+    int nekorektnyZaznam = 0; // Pre kontrolu, či záznamy nie sú korektné
+
+    for (int i = 0; i <= pocet_zaznamov; i++) {
+        int nasielSa = 0; // Pre kontrolu, či sa našiel záznam v poli id_modulu
+        for (int j = 0; j <= Cpocet_zaznamov; j++) {
+            int datum_ciachovania = datum_merania_temp[j];
+            if (strcmp(id_modulu[i], id_moduluC_temp[j]) == 0) {
+                nasielSa = 1;
+                int rozdiel_mesiacov = (datum_merania[i] / 10000 - datum_ciachovania / 10000) * 12 +
+                                       (datum_merania[i] / 100 % 100 - datum_ciachovania / 100 % 100);
+                if (rozdiel_mesiacov > Y) {
+                    printf("ID. mer. modulu [%s] má %d mesiacov od ciachovania.\n", id_modulu[i], rozdiel_mesiacov);
+                }
+            }
+        }
+
+        if (nasielSa == 0) {
+            printf("ID. mer. modulu [%s] nie je ciachovany.\n", id_modulu[i]);
+            nekorektnyZaznam = 1;
+        }
+    }
+
+    if (nekorektnyZaznam == 0) {
+        printf("Data su korektne.\n");
+    }
+
+    // Uvoľnenie temp premenných a dynamicky alokovanej pamäte
+    for (int i = 0; i < Cpocet_zaznamov; i++) {
+        free(id_moduluC_temp[i]);
+    }
+    free(id_moduluC_temp);
+    free(datum_merania_temp);
+
+    fclose(subor);
 }
 
-void s(){
 
-}
-void h(){
-
+void s() {
+    // Doimplementujte tuto funkciu
 }
 
-void z(){
+void h(char **typy_meranych_velicin, double *hodnoty, int pocet_zaznamov) {
+    if (typy_meranych_velicin == NULL || hodnoty == NULL || pocet_zaznamov == 0) {
+        printf("Polia nie sú vytvorené.\n");
+        return;
+    }
 
+
+    printf("%-15s %-10s %-10s %-10s\n", "Typ mer. vel.", "Početnosť", "Minimum", "Maximum");
+
+
+    int pocet_unikatnych_typou = 0;
+    char unikatne_typy[100][15];
+
+    for (int i = 0; i < pocet_zaznamov; i++) {
+        int nalezeno = 0;
+        for (int j = 0; j < pocet_unikatnych_typou; j++) {
+            if (strcmp(typy_meranych_velicin[i], unikatne_typy[j]) == 0) {
+                nalezeno = 1;
+                break;
+            }
+        }
+        if (!nalezeno) {
+            strcpy(unikatne_typy[pocet_unikatnych_typou], typy_meranych_velicin[i]);
+            pocet_unikatnych_typou++;
+        }
+    }
+
+    // Vytvořte tabulku pro každý jedinečný typ
+    for (int i = 0; i < pocet_unikatnych_typou; i++) {
+        char typ[15];
+        strcpy(typ, unikatne_typy[i]);
+
+        int pocetnost = 0;
+        double minimum = -1.0;
+        double maximum = -1.0;
+
+        for (int j = 0; j < pocet_zaznamov; j++) {
+            if (strcmp(typy_meranych_velicin[j], typ) == 0) {
+                pocetnost++;
+                if (minimum == -1.0 || hodnoty[j] < minimum) {
+                    minimum = hodnoty[j];
+                }
+                if (maximum == -1.0 || hodnoty[j] > maximum) {
+                    maximum = hodnoty[j];
+                }
+            }
+        }
+
+        // Vytisknout radek tabulky pro aktualni typ
+        printf("%-15s %-10d %-10.2lf %-10.2lf\n", typ, pocetnost, minimum, maximum);
+    }
 }
 
-void k(){
-
+void z() {
+    // Doimplementujte tuto funkciu
 }
 
-int main(){
+void k(char **id_modulu, char **pozicia_modulu, char **typ_mer_veliciny, double *hodnota, int *cas_merania, int *datum_merania, int pocet_zaznamov) {
+    for (int i = 0; i < pocet_zaznamov; i++) {
+        free(id_modulu[i]);
+        free(pozicia_modulu[i]);
+        free(typ_mer_veliciny[i]);
+    }
+    free(id_modulu);
+    free(pozicia_modulu);
+    free(typ_mer_veliciny);
+    free(hodnota);
+    free(cas_merania);
+    free(datum_merania);
+}
+
+int main() {
     char prikaz;
+    char **id_modulu = NULL;
+    char **pozicia_modulu = NULL;
+    char **typ_mer_veliciny = NULL;
+    double *hodnota = NULL;
+    int *cas_merania = NULL;
+    int *datum_merania = NULL;
+    int pocet_zaznamov = 0;
+
     while (1) {
         printf("Zadaj prikaz: ");
         scanf(" %c", &prikaz);
 
         if (prikaz == 'v') {
-            v();
+            v(&id_modulu, &pozicia_modulu, &typ_mer_veliciny, &hodnota, &cas_merania, &datum_merania, &pocet_zaznamov);
         } else if (prikaz == 'n') {
-            n();
-        } else if (prikaz == 'n') {
-            n();
+            n(&id_modulu, &pozicia_modulu, &typ_mer_veliciny, &hodnota, &cas_merania, &datum_merania, &pocet_zaznamov);
         } else if (prikaz == 'c') {
-            c();
+            c(id_modulu, datum_merania, pocet_zaznamov);
         } else if (prikaz == 's') {
             s();
         } else if (prikaz == 'h') {
-            h();
+            h(typ_mer_veliciny, hodnota, pocet_zaznamov);
         } else if (prikaz == 'z') {
             z();
         } else if (prikaz == 'k') {
-            k();
+            k(id_modulu, pozicia_modulu, typ_mer_veliciny, hodnota, cas_merania, datum_merania, pocet_zaznamov);
         } else {
-            printf("neplatny prikaz");
+            printf("Neplatný príkaz\n");
             break;
         }
     }
+    return 0;
 }
