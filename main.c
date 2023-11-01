@@ -262,11 +262,54 @@ void h(char **typy_meranych_velicin, double *hodnoty, int pocet_zaznamov) {
     }
 }
 
-void z() {
-    // Doimplementujte tuto funkciu
+void z(int *pocet_zaznamov, char ***id_modulu, char ***pozicia_modulu, char ***typ_mer_veliciny, double **hodnota, int **cas_merania, int **datum_merania) {
+    printf("Zadajte ID. mer. modulu: ");
+    char id_moduluZ[256];
+    int pocetVymazani = 0;
+    getchar();
+    scanf("%s", id_moduluZ);
+    int docasnyPocet = *pocet_zaznamov;
+
+    for (int i = 0; i < docasnyPocet; i++){
+        for (int k = 0; k < strlen(id_moduluZ); k++) {
+            printf("id_moduluZ[%d] = %d\n", k, id_moduluZ[k]);
+        }
+
+        for (int k = 0; k < strlen((*id_modulu)[0]); k++) {
+            printf("(*id_modulu)[0][%d] = %d\n", k, (*id_modulu)[0][k]);
+        }
+
+        printf("Porovnanie: %d\n", strcmp(id_moduluZ, (*id_modulu)[i]));
+        if (strcmp(id_moduluZ, (*id_modulu)[i]) == -10){
+            printf("Nájdený záznam na indexe %d\n", i);
+            free((*id_modulu)[i]);
+            free((*pozicia_modulu)[i]);
+            free((*typ_mer_veliciny)[i]);
+            // Pre vymazanie záznamu by ste mali posunúť všetky ďalšie záznamy smerom nahor
+            for (int j = i; j < (*pocet_zaznamov) - 1; j++) {
+                (*id_modulu)[j] = (*id_modulu)[j + 1];
+                (*pozicia_modulu)[j] = (*pozicia_modulu)[j + 1];
+                (*typ_mer_veliciny)[j] = (*typ_mer_veliciny)[j + 1];
+                (*hodnota)[j] = (*hodnota)[j + 1];
+                (*datum_merania)[j] = (*datum_merania)[j + 1];
+                (*cas_merania)[j] = (*cas_merania)[j + 1];
+            }
+            pocet_zaznamov--;
+            // Po vymazaní by ste mali aktualizovať pole ukazovateľov pomocou realloc
+            *id_modulu = (char **)realloc(*id_modulu, (*pocet_zaznamov) * sizeof(char *));
+            *pozicia_modulu = (char **)realloc(*pozicia_modulu, (*pocet_zaznamov) * sizeof(char *));
+            *typ_mer_veliciny = (char **)realloc(*typ_mer_veliciny, (*pocet_zaznamov) * sizeof(char *));
+            *hodnota = (double *)realloc(*hodnota, (*pocet_zaznamov) * sizeof(double));
+            *datum_merania = (int *)realloc(*datum_merania, (*pocet_zaznamov) * sizeof(int));
+            *cas_merania = (int *)realloc(*cas_merania, (*pocet_zaznamov) * sizeof(int));
+            printf("Záznam na indexe %d bol odstránený.\n", i);
+        }
+    }
 }
 
-void k(char **id_modulu, char **pozicia_modulu, char **typ_mer_veliciny, double *hodnota, int *cas_merania, int *datum_merania, int pocet_zaznamov) {
+
+
+void k(FILE **subor, char **id_modulu, char **pozicia_modulu, char **typ_mer_veliciny, double *hodnota, int *cas_merania, int *datum_merania, int pocet_zaznamov) {
     for (int i = 0; i < pocet_zaznamov; i++) {
         free(id_modulu[i]);
         free(pozicia_modulu[i]);
@@ -278,6 +321,7 @@ void k(char **id_modulu, char **pozicia_modulu, char **typ_mer_veliciny, double 
     free(hodnota);
     free(cas_merania);
     free(datum_merania);
+    fclose(*subor);
 }
 
 int main() {
@@ -305,9 +349,9 @@ int main() {
         } else if (prikaz == 'h') {
             h(typ_mer_veliciny, hodnota, pocet_zaznamov);
         } else if (prikaz == 'z') {
-            z();
+            z(&pocet_zaznamov, &id_modulu, &pozicia_modulu, &typ_mer_veliciny, &hodnota, &cas_merania, &datum_merania);
         } else if (prikaz == 'k') {
-            k(id_modulu, pozicia_modulu, typ_mer_veliciny, hodnota, cas_merania, datum_merania, pocet_zaznamov);
+            k(&subor, id_modulu, pozicia_modulu, typ_mer_veliciny, hodnota, cas_merania, datum_merania, pocet_zaznamov);
         } else {
             printf("Neplatný príkaz\n");
             break;
