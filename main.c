@@ -42,7 +42,7 @@ void v(FILE **subor, char ***id_modulu, char ***pozicia_modulu, char ***typ_mer_
         printf("Citam zo suboru\n");
     } else {
         for (int i = 0; i < *pocet_zaznamov; i++) {
-            printf("ID. mer. modulu: %s", (*id_modulu)[i]);
+            printf("ID. mer. modulu: %s\n", (*id_modulu)[i]);
             printf("Pozícia modulu: %s", (*pozicia_modulu)[i]);
             printf("Typ mer. veliciny: %s", (*typ_mer_veliciny)[i]);
             printf("Hodnota: %.2lf\n", (*hodnota)[i]);
@@ -96,6 +96,7 @@ void n(FILE *subor, char ***id_modulu, char ***pozicia_modulu, char ***typ_mer_v
         switch (zaznam % 6) {
             case 0:
                 id_modulu_temp[aktualny_zaznam] = strdup(riadok);
+                id_modulu_temp[aktualny_zaznam][strlen(id_modulu_temp[aktualny_zaznam]) - 1] = '\0';
                 break;
             case 1:
                 pozicia_modulu_temp[aktualny_zaznam] = strdup(riadok);
@@ -265,46 +266,54 @@ void h(char **typy_meranych_velicin, double *hodnoty, int pocet_zaznamov) {
 void z(int *pocet_zaznamov, char ***id_modulu, char ***pozicia_modulu, char ***typ_mer_veliciny, double **hodnota, int **cas_merania, int **datum_merania) {
     printf("Zadajte ID. mer. modulu: ");
     char id_moduluZ[256];
-    int pocetVymazani = 0;
-    getchar();
     scanf("%s", id_moduluZ);
     int docasnyPocet = *pocet_zaznamov;
-
+    int poleIndexov[docasnyPocet];
+    int pocetIndexov = 0;
     for (int i = 0; i < docasnyPocet; i++){
-        for (int k = 0; k < strlen(id_moduluZ); k++) {
-            printf("id_moduluZ[%d] = %d\n", k, id_moduluZ[k]);
+        if (strcmp(id_moduluZ, (*id_modulu)[i]) != 0){
+            poleIndexov[pocetIndexov]= i;
+            pocetIndexov++;
         }
 
-        for (int k = 0; k < strlen((*id_modulu)[0]); k++) {
-            printf("(*id_modulu)[0][%d] = %d\n", k, (*id_modulu)[0][k]);
-        }
-
-        printf("Porovnanie: %d\n", strcmp(id_moduluZ, (*id_modulu)[i]));
-        if (strcmp(id_moduluZ, (*id_modulu)[i]) == -10){
-            printf("Nájdený záznam na indexe %d\n", i);
-            free((*id_modulu)[i]);
-            free((*pozicia_modulu)[i]);
-            free((*typ_mer_veliciny)[i]);
-            // Pre vymazanie záznamu by ste mali posunúť všetky ďalšie záznamy smerom nahor
-            for (int j = i; j < (*pocet_zaznamov) - 1; j++) {
-                (*id_modulu)[j] = (*id_modulu)[j + 1];
-                (*pozicia_modulu)[j] = (*pozicia_modulu)[j + 1];
-                (*typ_mer_veliciny)[j] = (*typ_mer_veliciny)[j + 1];
-                (*hodnota)[j] = (*hodnota)[j + 1];
-                (*datum_merania)[j] = (*datum_merania)[j + 1];
-                (*cas_merania)[j] = (*cas_merania)[j + 1];
-            }
-            pocet_zaznamov--;
-            // Po vymazaní by ste mali aktualizovať pole ukazovateľov pomocou realloc
-            *id_modulu = (char **)realloc(*id_modulu, (*pocet_zaznamov) * sizeof(char *));
-            *pozicia_modulu = (char **)realloc(*pozicia_modulu, (*pocet_zaznamov) * sizeof(char *));
-            *typ_mer_veliciny = (char **)realloc(*typ_mer_veliciny, (*pocet_zaznamov) * sizeof(char *));
-            *hodnota = (double *)realloc(*hodnota, (*pocet_zaznamov) * sizeof(double));
-            *datum_merania = (int *)realloc(*datum_merania, (*pocet_zaznamov) * sizeof(int));
-            *cas_merania = (int *)realloc(*cas_merania, (*pocet_zaznamov) * sizeof(int));
-            printf("Záznam na indexe %d bol odstránený.\n", i);
-        }
     }
+    char **id_modulu_temp = (char **)malloc(pocetIndexov * sizeof(char *));
+    char **pozicia_modulu_temp = (char **)malloc(pocetIndexov * sizeof(char *));
+    char **typ_mer_veliciny_temp = (char **)malloc(pocetIndexov * sizeof(char *));
+    double *hodnota_temp = (double *)malloc(pocetIndexov * sizeof(double));
+    int *cas_merania_temp = (int *)malloc(pocetIndexov * sizeof(int));
+    int *datum_merania_temp = (int *)malloc(pocetIndexov * sizeof(int));
+    int pocitadloIndexov = 0;
+    for (int i = 0; i < *pocet_zaznamov; i++) {
+        if (poleIndexov[pocitadloIndexov] == i){
+            id_modulu_temp[pocitadloIndexov] = strdup((*id_modulu)[i]);
+            pozicia_modulu_temp[pocitadloIndexov] = strdup((*pozicia_modulu)[i]);
+            typ_mer_veliciny_temp[pocitadloIndexov] = strdup((*typ_mer_veliciny)[i]);
+            hodnota_temp[pocitadloIndexov] = (*hodnota)[i];
+            cas_merania_temp[pocitadloIndexov] = (*cas_merania)[i];
+            datum_merania_temp[pocitadloIndexov] = (*datum_merania)[i];
+            pocitadloIndexov++;
+        }
+        free((*id_modulu)[i]);
+        free((*pozicia_modulu)[i]);
+        free((*typ_mer_veliciny)[i]);
+    }
+    free(*id_modulu);
+    free(*pozicia_modulu);
+    free(*typ_mer_veliciny);
+    free(*hodnota);
+    free(*cas_merania);
+    free(*datum_merania);
+    *id_modulu = id_modulu_temp;
+    *pozicia_modulu = pozicia_modulu_temp;
+    *typ_mer_veliciny = typ_mer_veliciny_temp;
+    *hodnota = hodnota_temp;
+    *cas_merania = cas_merania_temp;
+    *datum_merania = datum_merania_temp;
+    printf("Počet zmazaných záznamov: %d\n", *pocet_zaznamov-pocetIndexov);
+    *pocet_zaznamov = pocetIndexov;
+
+
 }
 
 
